@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage/help
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<EOF
+Usage: gh rr
+Open your GitHub review-requested pull requests in a neat fzf picker.
+
+Requires:
+  - GITHUB_TOKEN environment variable
+  - jq
+  - fzf
+  - curl
+
+Flags:
+  -h, --help    Show this help message and exit.
+EOF
+  exit 0
+fi
+
+: "${GITHUB_TOKEN:?Environment variable GITHUB_TOKEN must be set}"
+
+for cmd in jq fzf curl; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "Error: '$cmd' is required. Please install $cmd." >&2
+    exit 1
+  fi
+done
+
+# Fetch open PRs requesting your review (exclude archived repositories)
+response=$(curl -sS \
+  -H "Accept: application/vnd.github.v3+json" \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  "https://api.github.com/search/issues?q=is:pr+is:open+review-requested:@me+archived:false&per_page=100")
+
+# Extract repo, title, age, URL; sort oldest-first and format age
+entries=$(jq -r '
+  .items
+  | map({
+      repo: (.repository_url | sub("https://api.github.com/repos/"; "")),
+      title: .title,
+      url: .html_url,
+      age: (now - (.created_at | fromdateiso8601))
+    })
+  | sort_by(.age) | reverse
+  | .[]
+  | (
+      def human($s):
+        if    $s <   60   then "\($s|floor)s"
+        elif  $s < 3600   then "\(($s/60)|floor)m"
+        elif  $s < 86400  then "\(($s/3600)|floor)h"
+        elif  $s < 604800 then "\(($s/86400)|floor)d"
+        else                   "\(($s/604800)|floor)w" end;
+      "\(.repo)\t\(.title)\t\(human(.age))\t\(.url)"
+    )
+' <<<"$response")
+
+# Exit if no PRs
+if [[ -z "$entries" ]]; then
+  echo "No open pull requests requesting your review." >&2
+  exit 0
+fi
+
+# Pad columns for neat display (repo, title, age)
+entries=$(printf "%s\n" "$entries" \
+  | awk -F $'\t' '{ lines[NR]=$0; if (NR==1||length($1)>w1) w1=length($1); if (NR==1||length($2)>w2) w2=length($2); if (NR==1||length($3)>w3) w3=length($3) } \
+      END { for(i=1;i<=NR;i++){ split(lines[i],f,FS); printf "%-*s\t%-*s\t%-*s\t%s\n", w1,f[1],w2,f[2],w3,f[3],f[4] } }')
+
+# Picker
+selected=$(printf "%s\n" "$entries" \
+  | fzf --header='Select PR to review' \
+        --delimiter=$'\t' \
+        --with-nth=1,2,3 \
+        --ansi)
+
+[[ -z "$selected" ]] && exit 0
+
+# Open URL (4th field)
+url=$(echo "$selected" | cut -f4)
+if command -v xdg-open &>/dev/null; then
+  xdg-open "$url"
+elif command -v open &>/dev/null; then
+  open "$url"
+else
+  echo "Please open this URL manually: $url"
+fi
