@@ -20,7 +20,7 @@ cp bin/gh-rr ~/.local/share/gh/extensions/rr/gh-rr
 chmod +x ~/.local/share/gh/extensions/rr/gh-rr
 ```
 
-Ensure you have `jq`, `fzf`, `curl` installed, and the `GITHUB_TOKEN` env var set.
+Ensure you have the GitHub CLI (`gh`), `jq`, `fzf`, and `curl` installed, and the `GITHUB_TOKEN` env var set.
 
 ## Usage
 
@@ -38,6 +38,12 @@ gh rr --help
 ## Clone & Checkout
 
 By default, pressing 'Enter' on a selection opens the PR in your browser. You can also press the 'c' key to clone the repository and checkout the pull request branch locally.
+
+In the fzf interface, pressing the 'm' key will show pull requests authored by you, and pressing the 'r' key will switch back to review-requested pull requests.
+
+When checking out a PR locally with 'c', the script will use GitHub CLI's `gh pr checkout <pr_number>` if available. Otherwise, it will fetch the PR metadata and check out the actual head branch name:
+- If the PR is from the same repository, it fetches `pull/<pr_number>/head` and checks out a local branch named after the head branch.
+- If the PR is from a fork, it adds a remote for the forked repository, fetches the head branch, and checks out a local branch tracking the fork's branch.
 
 Before cloning, you will be prompted to confirm the clone directory, which defaults to `~/workspace` unless overridden in a config file.
 
