@@ -21,12 +21,21 @@ fi
 
 : "${GITHUB_TOKEN:?Environment variable GITHUB_TOKEN must be set}"
 
-for cmd in jq fzf curl; do
+for cmd in jq fzf curl git; do
   if ! command -v "$cmd" &>/dev/null; then
     echo "Error: '$cmd' is required. Please install $cmd." >&2
     exit 1
   fi
 done
+
+# Load config file for custom settings if exists
+RCFILE="${HOME}/.gh-rr"
+if [[ -f "$RCFILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$RCFILE"
+fi
+# BASE_DIR for cloning PRs; default to ~/workspace if not set
+: "${BASE_DIR:=${HOME}/workspace}"
 
 # Fetch open PRs requesting your review (exclude archived repositories)
 response=$(curl -sS \
@@ -67,21 +76,48 @@ entries=$(printf "%s\n" "$entries" \
   | awk -F $'\t' '{ lines[NR]=$0; if (NR==1||length($1)>w1) w1=length($1); if (NR==1||length($2)>w2) w2=length($2); if (NR==1||length($3)>w3) w3=length($3) } \
       END { for(i=1;i<=NR;i++){ split(lines[i],f,FS); printf "%-*s\t%-*s\t%-*s\t%s\n", w1,f[1],w2,f[2],w3,f[3],f[4] } }')
 
-# Picker
-selected=$(printf "%s\n" "$entries" \
-  | fzf --header='Select PR to review' \
+# Picker with expect to handle 'c' for clone & checkout
+mapfile -t lines < <(printf "%s\n" "$entries" \
+  | fzf --header='Select PR to review (Enter=Open, c=Clone & checkout)' \
         --delimiter=$'\t' \
         --with-nth=1,2,3 \
-        --ansi)
+        --ansi \
+        --expect=enter,c)
+# No selection? exit
+if [ "${#lines[@]}" -lt 2 ]; then
+  exit 0
+fi
+key="${lines[0]}"
+selected="${lines[1]}"
 
-[[ -z "$selected" ]] && exit 0
-
-# Open URL (4th field)
+repo=$(echo "$selected" | cut -f1)
 url=$(echo "$selected" | cut -f4)
-if command -v xdg-open &>/dev/null; then
-  xdg-open "$url"
-elif command -v open &>/dev/null; then
-  open "$url"
+
+if [ "$key" = "c" ]; then
+  pr_number="${url##*/}"
+  clone_dir="${BASE_DIR}/${repo}"
+  printf "Clone directory: %s\n" "$clone_dir"
+  read -rp "Clone into this directory? [y/N] " yn
+  if [[ ! "$yn" =~ ^[Yy] ]]; then
+    exit 0
+  fi
+  if [[ ! -d "$clone_dir/.git" ]]; then
+    mkdir -p "$(dirname "$clone_dir")"
+    git clone "https://github.com/${repo}.git" "$clone_dir"
+  fi
+  cd "$clone_dir"
+  git fetch
+  git fetch origin "pull/${pr_number}/head:pr-${pr_number}"
+  git checkout "pr-${pr_number}"
+  echo "Checked out pr-${pr_number} in $clone_dir"
+  exec "$SHELL"
 else
-  echo "Please open this URL manually: $url"
+  # Open URL (4th field)
+  if command -v xdg-open &>/dev/null; then
+    xdg-open "$url"
+  elif command -v open &>/dev/null; then
+    open "$url"
+  else
+    echo "Please open this URL manually: $url"
+  fi
 fi

@@ -34,3 +34,18 @@ For help:
 ```bash
 gh rr --help
 ```
+
+## Clone & Checkout
+
+By default, pressing 'Enter' on a selection opens the PR in your browser. You can also press the 'c' key to clone the repository and checkout the pull request branch locally.
+
+Before cloning, you will be prompted to confirm the clone directory, which defaults to `~/workspace` unless overridden in a config file.
+
+### Configuration
+
+Create a config file at `~/.gh-rr` to customize settings:
+
+```bash
+# Example ~/.gh-rr
+BASE_DIR="${HOME}/projects/github"  # Directory where repos will be cloned
+```
