@@ -1,6 +1,6 @@
 # gh-rr: GitHub CLI extension for PR review requests
 
-> Open your GitHub review-requested pull requests in a neat terminal UI (Bubble Tea).
+> Open your GitHub review-requested pull requests in a neat terminal UI.
 
 ## Installation
 
@@ -10,17 +10,7 @@ Using the official GH CLI extension mechanism:
 gh extension install jinwoo1225/gh-rr
 ```
 
-Or install manually by cloning this repo and copying the script:
-
-```bash
-git clone https://github.com/jinwoo1225/gh-rr.git
-cd gh-rr
-mkdir -p ~/.local/share/gh/extensions/rr
-cp bin/gh-rr ~/.local/share/gh/extensions/rr/gh-rr
-chmod +x ~/.local/share/gh/extensions/rr/gh-rr
-```
-
-Ensure you have the GitHub CLI (`gh`), `jq`, `fzf`, and `curl` installed, and the `GITHUB_TOKEN` env var set.
+Ensure you have the [GitHub CLI (`gh`)](https://cli.github.com) installed, and the `GITHUB_TOKEN` env var set.
 
 ## Usage
 
@@ -29,17 +19,16 @@ Ensure you have the GitHub CLI (`gh`), `jq`, `fzf`, and `curl` installed, and th
 gh rr
 ```
 
-For help:
-
-```bash
-gh rr --help
-```
+Controls (Go TUI):
+  - ←/→: switch between Review Requests / My PRs / Draft PRs
+  - ↑/↓: navigate PR list
+  - Enter: open selected PR in browser
+  - c: clone & checkout selected PR locally
+  - q: quit TUI
 
 ## Clone & Checkout
 
 By default, pressing 'Enter' on a selection opens the PR in your browser. You can also press the 'c' key to clone the repository and checkout the pull request branch locally.
-
-In the fzf interface, pressing the 'm' key will show pull requests authored by you, and pressing the 'r' key will switch back to review-requested pull requests.
 
 When checking out a PR locally with 'c', the script will use GitHub CLI's `gh pr checkout <pr_number>` if available. Otherwise, it will fetch the PR metadata and check out the actual head branch name:
 - If the PR is from the same repository, it fetches `pull/<pr_number>/head` and checks out a local branch named after the head branch.
@@ -57,16 +46,13 @@ export BASE_DIR="${HOME}/projects/github"  # Directory where repos will be clone
 
 If `BASE_DIR` is not set, the default is `~/workspace`.
 
-## Go Implementation
-
-This tool has been ported to Go for improved performance and maintainability.
+## Contribution
 
 Requirements:
 
-  - Go 1.20+ installed in your PATH
+  - Go 1.24+ installed in your PATH
   - Go modules enabled (GO111MODULE=on)
   - git
-  - No external TUI binaries required (uses Bubble Tea)
 
 To build the Go binary, run:
 
@@ -76,18 +62,9 @@ go build -o bin/gh-rr main.go
 chmod +x bin/gh-rr
 ```
 
-Controls (Go TUI):
-  - ←/→: switch between Review Requests / My PRs / Draft PRs
-  - ↑/↓: navigate PR list
-  - Enter: open selected PR in browser
-  - c: clone & checkout selected PR locally
-  - q: quit TUI
-
 To install as a GitHub CLI extension:
 
 ```bash
 mkdir -p ~/.local/share/gh/extensions/rr
 cp bin/gh-rr ~/.local/share/gh/extensions/rr/gh-rr
 ```
-
-Now running `gh rr` will invoke the Go implementation (Bubble Tea TUI).
