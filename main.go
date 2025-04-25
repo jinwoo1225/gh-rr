@@ -11,8 +11,9 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
-	"time"
+   "sync"
+   "time"
+   "bufio"
 
 	"github.com/pkg/errors"
 
@@ -310,7 +311,15 @@ func cloneAndCheckout(repo, urlStr, baseDir, token string) {
 	pr := path.Base(strings.TrimRight(urlStr, "/"))
 	dir := filepath.Join(baseDir, repo)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		fmt.Printf("Cloning %s into %s\n", repo, dir)
+       reader := bufio.NewReader(os.Stdin)
+       fmt.Printf("Clone %s into %s? [Y/n]: ", repo, dir)
+       resp, _ := reader.ReadString('\n')
+       resp = strings.TrimSpace(resp)
+       if resp != "" && strings.ToLower(resp) == "n" {
+           fmt.Println("Skipping clone.")
+           return
+       }
+       fmt.Printf("Cloning %s into %s\n", repo, dir)
 		if err := os.MkdirAll(filepath.Dir(dir), 0755); err != nil {
 			fatal(err)
 		}

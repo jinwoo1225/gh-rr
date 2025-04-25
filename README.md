@@ -45,16 +45,17 @@ When checking out a PR locally with 'c', the script will use GitHub CLI's `gh pr
 - If the PR is from the same repository, it fetches `pull/<pr_number>/head` and checks out a local branch named after the head branch.
 - If the PR is from a fork, it adds a remote for the forked repository, fetches the head branch, and checks out a local branch tracking the fork's branch.
 
-Before cloning, you will be prompted to confirm the clone directory, which defaults to `~/workspace` unless overridden in a config file.
+Before cloning, you will be prompted to confirm the clone directory, which defaults to `~/workspace` unless overridden by setting the `BASE_DIR` environment variable.
 
 ### Configuration
 
-Create a config file at `~/.gh-rr` to customize settings:
+You can customize the clone directory by setting the `BASE_DIR` environment variable:
 
 ```bash
-# Example ~/.gh-rr
-BASE_DIR="${HOME}/projects/github"  # Directory where repos will be cloned
+export BASE_DIR="${HOME}/projects/github"  # Directory where repos will be cloned
 ```
+
+If `BASE_DIR` is not set, the default is `~/workspace`.
 
 ## Go Implementation
 
