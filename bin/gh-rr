@@ -135,16 +135,17 @@ url=$(echo "$selected" | cut -f4 | xargs)
 if [ "$key" = "c" ]; then
   pr_number="${url##*/}"
   clone_dir="${BASE_DIR}/${repo}"
-  printf "Clone directory: %s\n" "$clone_dir"
-  read -rp "Clone into this directory? [y/N] " yn
-  if [[ ! "$yn" =~ ^[Yy] ]]; then
-    exit 0
-  fi
-  # If target directory exists, skip cloning; otherwise clone the repository
+  # If target directory exists, skip clone; otherwise ask and clone
   if [[ -d "$clone_dir" ]]; then
     printf "Directory '%s' already exists, skipping clone\n" "$clone_dir"
   else
-    mkdir -p "$(dirname "$clone_dir")"
+    printf "Clone directory: %s\n" "$clone_dir"
+    read -rp "Clone into this directory? [Y/n] " yn
+    yn="${yn:-Y}"
+    if [[ ! "$yn" =~ ^[Yy] ]]; then
+      exit 0
+    fi
+    mkdir -p "$(dirname \"$clone_dir\")"
     git clone "https://github.com/${repo}.git" "$clone_dir"
   fi
   cd "$clone_dir"
