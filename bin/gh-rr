@@ -37,11 +37,10 @@ fi
 # BASE_DIR for cloning PRs; default to ~/workspace if not set
 : "${BASE_DIR:=${HOME}/workspace}"
 
-# Fetch open PRs requesting your review (exclude archived repositories)
+# Fetch open PRs requesting your review (non-draft, exclude archived repositories)
 response=$(curl -sS \
   -H "Accept: application/vnd.github.v3+json" \
   -H "Authorization: token $GITHUB_TOKEN" \
-  # Fetch non-draft PRs requesting your review
   "https://api.github.com/search/issues?q=is:pr+is:open+review-requested:@me+draft:false+archived:false&per_page=100")
 
 # Extract repo, title, age, URL; sort oldest-first and format age
