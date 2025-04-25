@@ -41,7 +41,8 @@ fi
 response=$(curl -sS \
   -H "Accept: application/vnd.github.v3+json" \
   -H "Authorization: token $GITHUB_TOKEN" \
-  "https://api.github.com/search/issues?q=is:pr+is:open+review-requested:@me+archived:false&per_page=100")
+  # Fetch non-draft PRs requesting your review
+  "https://api.github.com/search/issues?q=is:pr+is:open+review-requested:@me+draft:false+archived:false&per_page=100")
 
 # Extract repo, title, age, URL; sort oldest-first and format age
 entries=$(jq -r '
@@ -100,28 +101,55 @@ entries_my=$(jq -r '
       "\(.repo)\t\(.title)\t\(human(.age))\t\(.url)"
     )' <<<"$response_my")
 
-# Write entries to temp files for fzf reload
+## Fetch draft PRs requesting your review
+response_draft=$(curl -sS \
+  -H "Accept: application/vnd.github.v3+json" \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  "https://api.github.com/search/issues?q=is:pr+is:open+review-requested:@me+draft:true+archived:false&per_page=100")
+entries_draft=$(jq -r '
+  .items
+  | map({
+      repo: (.repository_url | sub("https://api.github.com/repos/"; "")),
+      title: .title,
+      url: .html_url,
+      age: (now - (.created_at | fromdateiso8601))
+    })
+  | sort_by(.age) | reverse
+  | .[]
+  | (
+      def human($s):
+        if    $s <   60   then "\($s|floor)s"
+        elif  $s < 3600   then "\(($s/60)|floor)m"
+        elif  $s < 86400  then "\(($s/3600)|floor)h"
+        elif  $s < 604800 then "\(($s/86400)|floor)d"
+        else                   "\(($s/604800)|floor)w" end;
+      "\(.repo)\t\(.title)\t\(human(.age))\t\(.url)"
+    )' <<<"$response_draft")
+## Write entries to temp files for fzf reload
 tmp_rev=$(mktemp)
 tmp_my=$(mktemp)
+tmp_draft=$(mktemp)
 printf "%s\n" "$entries" > "$tmp_rev"
 printf "%s\n" "$entries_my" > "$tmp_my"
+printf "%s\n" "$entries_draft" > "$tmp_draft"
 
 # Picker with reload: review or my PRs; expect enter,c keys
 # Fallback for bash<4: read fzf output into array
 lines=()
 while IFS= read -r line; do
   lines+=("$line")
-done < <(fzf --header='Select PR: Enter=Open, c=Clone & checkout; m=My PRs, r=Review requests' \
+done < <(fzf --header='Select PR: Enter=Open, c=Clone & checkout; m=My PRs, r=Review requests, d=Draft review requests' \
   --delimiter=$'\t' \
   --with-nth=1,2,3 \
   --ansi \
   --expect=enter,c \
   --bind "m:reload(cat $tmp_my)" \
   --bind "r:reload(cat $tmp_rev)" \
+  --bind "d:reload(cat $tmp_draft)" \
   < "$tmp_rev")
 
 # Cleanup temp files
-rm -f "$tmp_rev" "$tmp_my"
+rm -f "$tmp_rev" "$tmp_my" "$tmp_draft"
 # No selection? exit
 if [ "${#lines[@]}" -lt 2 ]; then
   exit 0
