@@ -55,3 +55,29 @@ Create a config file at `~/.gh-rr` to customize settings:
 # Example ~/.gh-rr
 BASE_DIR="${HOME}/projects/github"  # Directory where repos will be cloned
 ```
+
+## Go Implementation
+
+This tool has been ported to Go for improved performance and maintainability.
+
+Requirements:
+
+  - Go 1.20+ installed in your PATH
+  - fzf
+  - git
+
+To build the Go binary, run:
+
+```bash
+go build -o bin/gh-rr main.go
+chmod +x bin/gh-rr
+```
+
+To install as a GitHub CLI extension:
+
+```bash
+mkdir -p ~/.local/share/gh/extensions/rr
+cp bin/gh-rr ~/.local/share/gh/extensions/rr/gh-rr
+```
+
+Now running `gh rr` will invoke the Go implementation.
