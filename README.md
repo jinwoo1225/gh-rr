@@ -1,6 +1,6 @@
 # gh-rr: GitHub CLI extension for PR review requests
 
-> Open your GitHub review-requested pull requests in a neat fzf-powered menu.
+> Open your GitHub review-requested pull requests in a neat terminal UI (Bubble Tea).
 
 ## Installation
 
@@ -63,15 +63,24 @@ This tool has been ported to Go for improved performance and maintainability.
 Requirements:
 
   - Go 1.20+ installed in your PATH
-  - fzf
+  - Go modules enabled (GO111MODULE=on)
   - git
+  - No external TUI binaries required (uses Bubble Tea)
 
 To build the Go binary, run:
 
 ```bash
+go mod tidy
 go build -o bin/gh-rr main.go
 chmod +x bin/gh-rr
 ```
+
+Controls (Go TUI):
+  - ←/→: switch between Review Requests / My PRs / Draft PRs
+  - ↑/↓: navigate PR list
+  - Enter: open selected PR in browser
+  - c: clone & checkout selected PR locally
+  - q: quit TUI
 
 To install as a GitHub CLI extension:
 
@@ -80,4 +89,4 @@ mkdir -p ~/.local/share/gh/extensions/rr
 cp bin/gh-rr ~/.local/share/gh/extensions/rr/gh-rr
 ```
 
-Now running `gh rr` will invoke the Go implementation.
+Now running `gh rr` will invoke the Go implementation (Bubble Tea TUI).
