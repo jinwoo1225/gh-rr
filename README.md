@@ -19,7 +19,7 @@ Ensure you have the [GitHub CLI (`gh`)](https://cli.github.com) installed, and t
 gh rr
 ```
 
-Controls (Go TUI):
+Controls:
   - ←/→: switch between Review Requests / My PRs / Draft PRs
   - ↑/↓: navigate PR list
   - Enter: open selected PR in browser
