@@ -21,7 +21,7 @@ fi
 
 : "${GITHUB_TOKEN:?Environment variable GITHUB_TOKEN must be set}"
 
-for cmd in jq fzf curl git; do
+for cmd in jq fzf curl git xargs; do
   if ! command -v "$cmd" &>/dev/null; then
     echo "Error: '$cmd' is required. Please install $cmd." >&2
     exit 1
@@ -129,8 +129,8 @@ fi
 key="${lines[0]}"
 selected="${lines[1]}"
 
-repo=$(echo "$selected" | cut -f1)
-url=$(echo "$selected" | cut -f4)
+repo=$(echo "$selected" | cut -f1 | xargs)
+url=$(echo "$selected" | cut -f4 | xargs)
 
 if [ "$key" = "c" ]; then
   pr_number="${url##*/}"
@@ -140,7 +140,10 @@ if [ "$key" = "c" ]; then
   if [[ ! "$yn" =~ ^[Yy] ]]; then
     exit 0
   fi
-  if [[ ! -d "$clone_dir/.git" ]]; then
+  # If target directory exists, skip cloning; otherwise clone the repository
+  if [[ -d "$clone_dir" ]]; then
+    printf "Directory '%s' already exists, skipping clone\n" "$clone_dir"
+  else
     mkdir -p "$(dirname "$clone_dir")"
     git clone "https://github.com/${repo}.git" "$clone_dir"
   fi
