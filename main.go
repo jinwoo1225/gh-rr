@@ -11,8 +11,10 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
-	"time"
+   "sync"
+   "time"
+	"bufio"
+	"syscall"
 
 	"github.com/pkg/errors"
 
@@ -310,7 +312,15 @@ func cloneAndCheckout(repo, urlStr, baseDir, token string) {
 	pr := path.Base(strings.TrimRight(urlStr, "/"))
 	dir := filepath.Join(baseDir, repo)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		fmt.Printf("Cloning %s into %s\n", repo, dir)
+       reader := bufio.NewReader(os.Stdin)
+       fmt.Printf("Clone %s into %s? [Y/n]: ", repo, dir)
+       resp, _ := reader.ReadString('\n')
+       resp = strings.TrimSpace(resp)
+       if resp != "" && strings.ToLower(resp) == "n" {
+           fmt.Println("Skipping clone.")
+           return
+       }
+       fmt.Printf("Cloning %s into %s\n", repo, dir)
 		if err := os.MkdirAll(filepath.Dir(dir), 0755); err != nil {
 			fatal(err)
 		}
@@ -364,6 +374,18 @@ func cloneAndCheckout(repo, urlStr, baseDir, token string) {
 		}
 	}
 	fmt.Printf("Checked out PR #%s in %s\n", pr, dir)
+	// change working directory and launch a shell in the repo
+	if err := os.Chdir(dir); err != nil {
+		fatal(err)
+	}
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "/bin/sh"
+	}
+	// replace current process with a shell in the checked-out repo
+	if err := syscall.Exec(shell, []string{shell}, os.Environ()); err != nil {
+		fatal(err)
+	}
 }
 
 // openURL opens the given URL in the default browser.
