@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,10 +12,9 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-   "sync"
-   "time"
-	"bufio"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -153,7 +153,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		mine, err := fetchIssues(ctx, client, "is:pr is:open author:@me archived:false")
+		mine, err := fetchIssues(ctx, client, "is:pr is:open author:@me draft:false archived:false")
 		if err != nil {
 			log.Println("Error While Fetching My PRs", errors.WithStack(err))
 			return
@@ -312,15 +312,15 @@ func cloneAndCheckout(repo, urlStr, baseDir, token string) {
 	pr := path.Base(strings.TrimRight(urlStr, "/"))
 	dir := filepath.Join(baseDir, repo)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-       reader := bufio.NewReader(os.Stdin)
-       fmt.Printf("Clone %s into %s? [Y/n]: ", repo, dir)
-       resp, _ := reader.ReadString('\n')
-       resp = strings.TrimSpace(resp)
-       if resp != "" && strings.ToLower(resp) == "n" {
-           fmt.Println("Skipping clone.")
-           return
-       }
-       fmt.Printf("Cloning %s into %s\n", repo, dir)
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Printf("Clone %s into %s? [Y/n]: ", repo, dir)
+		resp, _ := reader.ReadString('\n')
+		resp = strings.TrimSpace(resp)
+		if resp != "" && strings.ToLower(resp) == "n" {
+			fmt.Println("Skipping clone.")
+			return
+		}
+		fmt.Printf("Cloning %s into %s\n", repo, dir)
 		if err := os.MkdirAll(filepath.Dir(dir), 0755); err != nil {
 			fatal(err)
 		}
@@ -429,9 +429,5 @@ var keys = keyMap{
 	Checkout: key.NewBinding(
 		key.WithKeys("c"),
 		key.WithHelp("c", "checkout PR"),
-	),
-	Quit: key.NewBinding(
-		key.WithKeys("q", "ctrl+c"),
-		key.WithHelp("q", "quit"),
 	),
 }
