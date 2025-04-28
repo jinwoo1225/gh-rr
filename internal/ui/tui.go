@@ -8,7 +8,22 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var (
+	docStyle = lipgloss.NewStyle().Margin(1, 2)
+
+	tabStyle = lipgloss.NewStyle().
+		Padding(0, 1).
+		Foreground(lipgloss.Color("240"))
+
+	selectedTabStyle = lipgloss.NewStyle().
+		Padding(0, 1).
+		Bold(true).
+		Foreground(lipgloss.Color("205")). // 더 밝은 색상
+		Background(lipgloss.Color("236")). // 배경색 추가
+		Border(lipgloss.NormalBorder(), false, false, true, false). // 하단 테두리 추가
+		BorderForeground(lipgloss.Color("205")) // 테두리 색상
+
+)
 
 type ListModel struct {
 	Categories    []string
@@ -43,9 +58,9 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
-		m.List.SetSize(msg.Width-h, msg.Height-v)
+		m.List.SetSize(msg.Width-h, msg.Height-v-3)
 	}
-	m.List.Title = m.Categories[m.CategoryIndex]
+	m.List.Title = ""
 
 	var cmd tea.Cmd
 	m.List, cmd = m.List.Update(msg)
@@ -56,20 +71,30 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *ListModel) View() string {
 	sb := strings.Builder{}
 
-	for _, cat := range m.Categories {
-		if cat == m.Categories[m.CategoryIndex] {
-			sb.WriteString(" [ ")
-			sb.WriteString(cat)
-			sb.WriteString(" ]")
+	// 탭 렌더링 개선
+	var tabsView []string
+	for i, cat := range m.Categories {
+		if i == m.CategoryIndex {
+			tabsView = append(tabsView, selectedTabStyle.Render(cat))
 		} else {
-			sb.WriteString("   ")
-			sb.WriteString(cat)
-			sb.WriteString("  ")
+			tabsView = append(tabsView, tabStyle.Render(cat))
 		}
 	}
 
-	sb.WriteString("\n")
-	sb.WriteString(m.List.View())
+	// 탭 간 간격을 조정하고 모든 탭을 연결
+	sb.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, tabsView...))
+	sb.WriteString("\n\n") // 아래 콘텐츠와의 여백 추가
+
+	// 목록이 비어있는 경우 메시지 표시
+	if len(m.Entries[m.CategoryIndex]) == 0 {
+		emptyMsg := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("240")).
+			Italic(true).
+			Render("🥳 Nothing to see here 🎊")
+		sb.WriteString(emptyMsg)
+	} else {
+		sb.WriteString(m.List.View())
+	}
 
 	return docStyle.Render(sb.String())
 }
