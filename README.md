@@ -10,6 +10,21 @@ Using the official GH CLI extension mechanism:
 gh extension install jinwoo1225/gh-rr
 ```
 
+To build the Go binary, run:
+
+```bash
+go mod tidy
+go build -o bin/gh-rr main.go
+chmod +x bin/gh-rr
+```
+
+To install as a GitHub CLI extension:
+
+```bash
+mkdir -p ~/.local/share/gh/extensions/rr
+cp bin/gh-rr ~/.local/share/gh/extensions/rr/gh-rr
+```
+
 Ensure you have the [GitHub CLI (`gh`)](https://cli.github.com) installed, and the `GITHUB_TOKEN` env var set.
 
 ## Usage
@@ -54,17 +69,4 @@ Requirements:
   - Go modules enabled (GO111MODULE=on)
   - git
 
-To build the Go binary, run:
 
-```bash
-go mod tidy
-go build -o bin/gh-rr main.go
-chmod +x bin/gh-rr
-```
-
-To install as a GitHub CLI extension:
-
-```bash
-mkdir -p ~/.local/share/gh/extensions/rr
-cp bin/gh-rr ~/.local/share/gh/extensions/rr/gh-rr
-```
