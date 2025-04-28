@@ -10,7 +10,7 @@ Using the official GH CLI extension mechanism:
 gh extension install jinwoo1225/gh-rr
 ```
 
-Ensure you have the [GitHub CLI (`gh`)](https://cli.github.com) installed, and the `GITHUB_TOKEN` env var set.
+Ensure you have the [GitHub CLI (`gh`)](https://cli.github.com) installed.
 
 ## Usage
 
