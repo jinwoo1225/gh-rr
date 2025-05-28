@@ -1,9 +1,11 @@
 # gh-rr: GitHub CLI extension for PR review requests
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q31FLN2M)
 
 ![title](https://github.com/user-attachments/assets/ef194dbc-39c1-404e-9d29-a01cc92de82d)
 
 
 > Open your GitHub review-requested pull requests in a neat terminal UI.
+
 
 ## Installation
 
