@@ -119,20 +119,8 @@ func main() {
 	delegate := list.NewDefaultDelegate()
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Foreground(lipgloss.Color("205")).Bold(true)
 	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.Foreground(lipgloss.Color("240"))
-	delegate.ShortHelpFunc = func() []key.Binding {
-		return []key.Binding{
-			ui.Keys.Left, ui.Keys.Right, ui.Keys.Enter, ui.Keys.Checkout, ui.Keys.Quit,
-		}
-	}
-	delegate.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{
-			{ui.Keys.Left, ui.Keys.Right},
-			{ui.Keys.Enter, ui.Keys.Checkout},
-			{ui.Keys.Quit},
-		}
-	}
 
-	l := list.New(initialItems, delegate, 0, 0)
+	l := list.New(initialItems, &delegate, 0, 0)
 	l.SetShowHelp(true)
 	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
@@ -143,6 +131,40 @@ func main() {
 		Entries:    entries2d,
 		List:       l,
 	}
+	delegate.ShortHelpFunc = func() []key.Binding {
+		now := time.Now()
+		remaining := int(listModel.NextRefresh().Sub(now).Seconds())
+		if remaining < 0 {
+			remaining = 0
+		}
+		timer := utils.HumanizeDuration(remaining)
+		return []key.Binding{
+			ui.Keys.Left, ui.Keys.Right, ui.Keys.Enter,
+			key.NewBinding(
+				key.WithKeys("r"),
+				key.WithHelp("r", fmt.Sprintf("refresh (in %s)", timer)),
+			),
+			ui.Keys.Checkout, ui.Keys.Quit,
+		}
+	}
+	delegate.FullHelpFunc = func() [][]key.Binding {
+		now := time.Now()
+		remaining := int(listModel.NextRefresh().Sub(now).Seconds())
+		if remaining < 0 {
+			remaining = 0
+		}
+		timer := utils.HumanizeDuration(remaining)
+		rBinding := key.NewBinding(
+			key.WithKeys("r"),
+			key.WithHelp("r", fmt.Sprintf("refresh (in %s)", timer)),
+		)
+		return [][]key.Binding{
+			{ui.Keys.Left, ui.Keys.Right},
+			{ui.Keys.Enter, rBinding, ui.Keys.Checkout},
+			{ui.Keys.Quit},
+		}
+	}
+
 	finalModel, err := tea.NewProgram(listModel, tea.WithAltScreen()).Run()
 	if err != nil {
 		log.Panicln(errors.Wrap(err, "running tea program"))
