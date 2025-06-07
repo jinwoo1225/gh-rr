@@ -29,14 +29,20 @@ func GetBaseDir() string {
 
 // ExpandHome expands a leading '~' in a path to the user home directory.
 func ExpandHome(p string) string {
-	if strings.HasPrefix(p, "~") {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return p
-		}
-		return filepath.Join(home, p[1:])
-	}
-	return p
+   if strings.HasPrefix(p, "~") {
+       home, err := os.UserHomeDir()
+       if err != nil {
+           return p
+       }
+       if p == "~" {
+           return home
+       }
+       if len(p) >= 2 && p[1] == '/' {
+           return filepath.Join(home, p[2:])
+       }
+       return filepath.Join(home, p[1:])
+   }
+   return p
 }
 
 func CloneAndCheckout(ctx context.Context, repositoryNameWithOwner string, prNumber int, baseDir string) {
