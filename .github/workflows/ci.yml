@@ -20,6 +20,12 @@ jobs:
         with:
           go-version-file: go.mod
 
+
+      - name: Check Go version
+        id: check-go-version
+        run: |
+          echo "GO_VERSION=$(go version | awk '{print $3}')" >> $GITHUB_ENV
+
       - name: check go cache
         id: check-go-cache
         uses: actions/cache@v4
@@ -29,7 +35,7 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~.cache/go-build
-          key: setup-go-${{ runner.name }}-go-${{ hashFiles('**/go.mod') }}
+          key: setup-go-${{ runner.os }}-${{ runner.arch }}-go-${{ steps.check-go-version.outputs }}-${{ hashFiles('**/go.mod') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
