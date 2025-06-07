@@ -53,10 +53,10 @@ func TestExpandHome(t *testing.T) {
 
 func TestGetBaseDir(t *testing.T) {
 	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
+	t.Cleanup(func() { os.Setenv("HOME", origHome) })
 	os.Setenv("HOME", filepath.Join(string(os.PathSeparator), "home", "user"))
 	origBase := os.Getenv("BASE_DIR")
-	defer os.Setenv("BASE_DIR", origBase)
+	t.Cleanup(func() { os.Setenv("BASE_DIR", origBase) })
 
 	os.Unsetenv("BASE_DIR")
 	wantDefault := filepath.Join(os.Getenv("HOME"), "workspace")
