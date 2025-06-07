@@ -16,32 +16,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Go
+        id: setup-go
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
 
-
-      - name: Check Go version
-        id: check-go-version
-        run: |
-          echo "GO_VERSION=$(go version | awk '{print $3}')" >> $GITHUB_ENV
-
-      - name: check go cache
-        id: check-go-cache
-        uses: actions/cache@v4
-        with: 
-          lookup-only: true
-          enableCrossOsArchive: true
-          path: |
-            ~/go/pkg/mod
-            ~.cache/go-build
-          key: setup-go-${{ runner.os }}-${{ runner.arch }}-go-${{ steps.check-go-version.outputs }}-${{ hashFiles('**/go.mod') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-
       - name: Install dependencies
-        if: steps.check-go-cache.outputs.cache-hit != 'true'
+        if: steps.setup-go.outputs.cache-hit != 'true'
         run: |
           go mod download
 
