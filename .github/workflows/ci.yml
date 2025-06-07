@@ -25,10 +25,11 @@ jobs:
         uses: actions/cache@v4
         with: 
           lookup-only: true
+          enableCrossOsArchive: true
           path: |
-            ~/.cache/go-build
-            ~/.local/share/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.mod') }}
+            ~/go/pkg/mod
+            ~.cache/go-build
+          key: setup-go-${{ runner.os }}-go-${{ hashFiles('**/go.mod') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
