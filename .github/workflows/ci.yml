@@ -29,7 +29,7 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~.cache/go-build
-          key: setup-go-${{ runner.os }}-go-${{ hashFiles('**/go.mod') }}
+          key: setup-go-${{ runner.name }}-go-${{ hashFiles('**/go.mod') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
