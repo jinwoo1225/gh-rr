@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         if: steps.setup-go.outputs.cache-hit != 'true'
         run: |
-          go mod download
+          go mod download -x
 
       - name: Run tests
         run: |
